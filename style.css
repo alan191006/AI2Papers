@@ -1,31 +1,39 @@
 body {
-    font-family: Arial, sans-serif;
+    background-color: #eeeeee;
+    font-family: Helvetica, sans-serif;
     text-align: center;
+    color: #333
   }
   
-  h1 {
+h1 {
     color: #333;
   }
   
-  .paper {
-    border: 1px solid #ccc;
-    border-radius: 5px;
+.paper {
+    border-radius: 18px;
+    background-color: #dddddd;
     padding: 10px;
     margin-bottom: 20px;
   }
   
-  .title {
+.title {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
   }
   
-  .authors {
+.authors {
     font-size: 14px;
     color: #666;
     margin-bottom: 10px;
   }
   
-  .abstract {
+.abstract {
     font-size: 14px;
+  }
+
+.url a {
+    color: inherit;
+    font-weight: bold;
+    text-decoration: none; 
   }

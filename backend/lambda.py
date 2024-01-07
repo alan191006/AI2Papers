@@ -1,7 +1,6 @@
 import re
 import json
-
-# Cannot use requests because Lambda doesn't support
+import base64
 import urllib3
 
 from datetime import datetime
@@ -32,37 +31,60 @@ def lambda_handler(event, context):
         }
 
         url = f"{base_url}?{('&'.join(f'{k}={v}' for k, v in params.items()))}"
-        
-        response     = http.request('GET', url)
+
+        # Make the HTTP request using urllib3
+        response = http.request('GET', url)
         api_response = response.data.decode('utf-8')
 
         # Debug: Save API response to CloudWatch Logs
         print("API Response:", api_response)
 
-    if read_from_file or response.status == 200:
-        entries_list = extract_entries(api_response)
-
-        if entries_list:
-            # Convert entries_list to JSON format
-            json_data = json.dumps(entries_list, indent=2)
-
-            # Log JSON data to CloudWatch Logs
-            print("JSON Data:", json_data)
-
-            return {
-                "statusCode": 200,
-                "body": json_data
-            }
+        if read_from_file or response.status == 200:
+            entries_list = extract_entries(api_response)
+    
+            if entries_list:
+                # Convert entries_list to JSON format
+                json_data = json.dumps(entries_list, indent=2)
+        
+                # GitHub credentials
+                github_url = 'https://api.github.com/repos/alan191006/AI2Papers/contents/output.json'
+                github_token = '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'
+        
+                headers = {
+                    'Authorization': f'Bearer {github_token}',
+                    'Content-Type': 'application/json',
+                }
+        
+                # Fetch current file content to get the sha
+                github_response = http.request('GET', github_url, headers=headers)
+                response_data = json.loads(github_response.data.decode('utf-8'))
+                current_sha = response_data.get('sha', '')
+        
+                data = {
+                    'message': 'Update output.json',
+                    'content': base64.b64encode(json_data.encode()).decode(),
+                    'sha': current_sha
+                }
+        
+                # Perform the update using a PUT request
+                github_response = urllib3.PoolManager().request('PUT', github_url, headers=headers, body=json.dumps(data))
+        
+                print("GitHub Response:", github_response.data.decode('utf-8'))
+        
+                return {
+                    "statusCode": github_response.status,
+                    "body": github_response.data.decode('utf-8')
+                }
+            else:
+                return {
+                    "statusCode": 200,
+                    "body": "No entries found."
+                }
         else:
             return {
-                "statusCode": 200,
-                "body": "No entries found."
+                "statusCode": response.status,
+                "body": response.data.decode('utf-8')
             }
-    else:
-        return {
-            "statusCode": response.status,
-            "body": response.data.decode('utf-8')
-        }
 
 def extract_entries(api_response):
     entry_pattern     = re.compile(r'<entry>.*?</entry>', 
@@ -77,8 +99,9 @@ def extract_entries(api_response):
                                    re.DOTALL)
     link_pattern      = re.compile(r'<link href="(.*?)" rel="alternate" type="text/html"/>', 
                                    re.DOTALL)
-
-    entries_list = []
+                                   
+    latest_entry_published_date = None
+    latest_day_entries = []
 
     for entry_match in entry_pattern.finditer(api_response):
         entry_xml = entry_match.group(0)
@@ -88,20 +111,16 @@ def extract_entries(api_response):
             entry_published = entry_published_match.group(1)
             entry_published_date = datetime.strptime(entry_published, "%Y-%m-%dT%H:%M:%SZ")
 
-            if not entries_list:
-                # Get all entry with same published day as first entry
-                first_entry_published_date = entry_published_date
-                same_day_entries = [entry_xml]
-                
-            elif entry_published_date.date() == first_entry_published_date.date():
-                same_day_entries.append(entry_xml)
-                
-            else:
-                # Stop the loop when the date doesn't match
-                break
+            if latest_entry_published_date is None or entry_published_date > latest_entry_published_date:
+                latest_entry_published_date = entry_published_date
+                latest_day_entries = [entry_xml]
+            elif entry_published_date.date() == latest_entry_published_date.date():
+                latest_day_entries.append(entry_xml)
 
-    # Process entries with the same day as the first entry
-    for entry_xml in same_day_entries:
+    entries_list = []
+
+    # Process entries with the same day as the latest entry
+    for entry_xml in latest_day_entries:
         title_match    = title_pattern.search(entry_xml)
         author_matches = author_pattern.findall(entry_xml)
         summary_match  = summary_pattern.search(entry_xml)
@@ -123,3 +142,6 @@ def extract_entries(api_response):
             entries_list.append(entry_data)
 
     return entries_list
+
+if __name__ == "__main__":
+    lambda_handler(None, None)

@@ -34,11 +34,10 @@ async function fetchPapers() {
       paperDiv.appendChild(abstractDiv);
     
       const urlDiv = document.createElement('div');
-      urlDiv.className = 'url';
-      // Display "URL: " and align to the left
-      urlDiv.style.textAlign = 'left'; // Fix: Set text alignment for urlDiv
-      urlDiv.innerHTML = `URL: <a href="${paper.link}" target="_blank">${paper.link}</a>`;
-      urlDiv.style.marginTop = '0.5em';
+urlDiv.className = 'url';
+// Display "Go to paper" as a clickable link
+urlDiv.innerHTML = `<a href="${paper.link}" target="_blank">Go to paper</a>`;
+urlDiv.style.marginTop = '0.5em';
 
       paperDiv.appendChild(urlDiv);
     

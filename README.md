@@ -10,3 +10,8 @@
 
 - **Automatic Updates:** The application fetches two (2, for now) new papers daily, ensuring a constant stream of free rea-, I mean, fresh content.
 - **Paper Classification:** A lightweight machine learning model assesses the "interesting-ness" of each paper and categorizes it as "good."
+
+## Todo
+
+- Paper filter algorithm
+- Better UI
