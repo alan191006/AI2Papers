@@ -1,6 +1,6 @@
 async function fetchPapers() {
   try {
-    const response = await fetch('https://github.com/alan191006/AI2Papers/blob/canon/output.json');
+    const response = await fetch('./output.json');
     const data = await response.json();
 
     const paperContainer = document.getElementById('paper-container');
