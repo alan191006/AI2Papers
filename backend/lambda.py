@@ -132,6 +132,7 @@ def extract_entries(api_response):
             abstract = summary_match.group(1)
             link     = link_match.group(1)
 
+
             entry_data = {
                 "title":    title,
                 "authors":  authors,

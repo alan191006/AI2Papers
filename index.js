@@ -1,53 +1,43 @@
-async function fetchPapers() {
-  try {
-    const response = await fetch('./output.json');
-    const data = await response.json();
-
-    const paperContainer = document.getElementById('paper-container');
-    paperContainer.innerHTML = '';
-
-    data.forEach(paper => {
-      const paperDiv = document.createElement('div');
-      paperDiv.className = 'paper';
-    
-      const titleDiv = document.createElement('div');
-      titleDiv.className = 'title';
-      titleDiv.textContent = paper.title;
-      paperDiv.appendChild(titleDiv);
-    
-      const authorDiv = document.createElement('div');
-      authorDiv.className = 'author';
-      authorDiv.style.fontSize = 'smaller';
-      // Remove the "Authors: " prefix
-      authorDiv.textContent = paper.authors;
-      paperDiv.appendChild(authorDiv);
-    
-      // Add a margin between author and abstract
-      authorDiv.style.marginBottom = '0.5em';
-    
-      const abstractDiv = document.createElement('div');
-      abstractDiv.className = 'abstract';
-      // Set text alignment to justify
-      abstractDiv.style.textAlign = 'justify';
-      // Remove the "Abstract: " prefix
-      abstractDiv.textContent = paper.abstract;
-      paperDiv.appendChild(abstractDiv);
-    
-      const urlDiv = document.createElement('div');
-urlDiv.className = 'url';
-// Display "Go to paper" as a clickable link
-urlDiv.innerHTML = `<a href="${paper.link}" target="_blank">Go to paper</a>`;
-urlDiv.style.marginTop = '0.5em';
-
-      paperDiv.appendChild(urlDiv);
-    
-      paperContainer.appendChild(paperDiv);
-    });
-    
-  } catch (error) {
-    console.error('Error fetching papers:', error);
-  }
-}
-
-// Call the function to fetch and display papers
-fetchPapers();
+new Vue({
+  el: '#app',
+  data: {
+    papers: [] // Initialize papers as an empty array
+  },
+  async mounted() {
+    try {
+      const response = await fetch('./output.json');
+      this.papers = await response.json();
+      this.papers = data.map(paper => ({ ...paper, isExpanded: false }));
+    } catch (error) {
+      console.error('Error fetching papers:', error);
+    }
+  },
+  methods: {
+    truncateAbstract(abstract) {
+      const words = abstract.split(' ');
+      if (words.length > 30) {
+        return words.slice(0, 30).join(' ') + '...';
+      }
+      return abstract;
+    },
+    toggleExpand(paperId) {
+      const paper = this.papers.find(paper => paper.id === paperId);
+      paper.isExpanded = !paper.isExpanded;
+    }
+  },
+  template: `
+    <div id="paper-container">
+      <div v-for="paper in papers" :key="paper.id" class="paper">
+        <div class="title">{{ paper.title }}</div>
+        <div class="author" style="font-size: smaller; margin-bottom: 0.5em;">{{ paper.authors }}</div>
+        <div class="abstract" style="text-align: left;" @click="toggleExpand(paper.id)">
+          {{ paper.isExpanded ? paper.abstract : truncateAbstract(paper.abstract) }}
+          <span v-if="!paper.isExpanded" class="expand-indicator">...</span>
+        </div>
+        <div v-if="paper.isExpanded" class="url" style="margin-top: 0.5em;">
+          <a :href="paper.link" target="_blank">Go to paper</a>
+        </div>
+      </div>
+    </div>
+  `
+});
