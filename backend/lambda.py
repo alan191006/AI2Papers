@@ -2,6 +2,7 @@ import re
 import json
 import base64
 import urllib3
+import random
 
 from datetime import datetime
 
@@ -44,7 +45,7 @@ def lambda_handler(event, context):
     
             if entries_list:
                 # Convert entries_list to JSON format
-                json_data = json.dumps(entries_list, indent=2)
+                json_data = json.dumps(random.sample(entries_list, 2), indent=2)
         
                 # GitHub credentials
                 github_url = 'https://api.github.com/repos/alan191006/AI2Papers/contents/output.json'
