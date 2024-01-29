@@ -1,5 +1,5 @@
 new Vue({
-  el: '#app',
+  el: '#paper-container',
   data: {
     papers: [] // Initialize papers as an empty array
   },
@@ -8,21 +8,21 @@ new Vue({
       const response = await fetch('./output.json');
       const data = await response.json();
 
-      // Initialize isExpanded property for each paper
-      this.papers = data.map(paper => ({ ...paper, isExpanded: false }));
+      // Initialize isExpanded property for each paper using array index
+      this.papers = data.map((paper, index) => ({ ...paper, isExpanded: false, index }));
     } catch (error) {
       console.error('Error fetching papers:', error);
     }
   },
   methods: {
-    toggleExpand(paperId) {
+    toggleExpand(paperIndex) {
       // Toggle the isExpanded property for the clicked paper
-      const clickedPaper = this.papers.find(paper => paper.id === paperId);
+      const clickedPaper = this.papers[paperIndex];
       clickedPaper.isExpanded = !clickedPaper.isExpanded;
 
       // Close other expanded papers
-      this.papers.forEach(paper => {
-        if (paper.id !== paperId) {
+      this.papers.forEach((paper, index) => {
+        if (index !== paperIndex) {
           paper.isExpanded = false;
         }
       });
@@ -30,7 +30,7 @@ new Vue({
   },
   template: `
     <div id="paper-container">
-      <div v-for="paper in papers" :key="paper.id" class="paper" @click="toggleExpand(paper.id)">
+      <div v-for="(paper, index) in papers" :key="index" class="paper" @click="toggleExpand(index)">
         <div class="title">{{ paper.title }}</div>
         <div v-if="paper.isExpanded" class="expanded-content">
           <div class="author">{{ paper.authors }}</div>
