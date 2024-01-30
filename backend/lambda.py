@@ -43,49 +43,7 @@ def lambda_handler(event, context):
         if read_from_file or response.status == 200:
             entries_list = extract_entries(api_response)
     
-            if entries_list:
-                # Convert entries_list to JSON format
-                json_data = json.dumps(random.sample(entries_list, 2), indent=2)
-        
-                # GitHub credentials
-                github_url = 'https://api.github.com/repos/alan191006/AI2Papers/contents/output.json'
-                github_token = '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'
-        
-                headers = {
-                    'Authorization': f'Bearer {github_token}',
-                    'Content-Type': 'application/json',
-                }
-        
-                # Fetch current file content to get the sha
-                github_response = http.request('GET', github_url, headers=headers)
-                response_data = json.loads(github_response.data.decode('utf-8'))
-                current_sha = response_data.get('sha', '')
-        
-                data = {
-                    'message': 'Update output.json',
-                    'content': base64.b64encode(json_data.encode()).decode(),
-                    'sha': current_sha
-                }
-        
-                # Perform the update using a PUT request
-                github_response = urllib3.PoolManager().request('PUT', github_url, headers=headers, body=json.dumps(data))
-        
-                print("GitHub Response:", github_response.data.decode('utf-8'))
-        
-                return {
-                    "statusCode": github_response.status,
-                    "body": github_response.data.decode('utf-8')
-                }
-            else:
-                return {
-                    "statusCode": 200,
-                    "body": "No entries found."
-                }
-        else:
-            return {
-                "statusCode": response.status,
-                "body": response.data.decode('utf-8')
-            }
+            
 
 def extract_entries(api_response):
     entry_pattern     = re.compile(r'<entry>.*?</entry>', 
@@ -112,9 +70,11 @@ def extract_entries(api_response):
             entry_published = entry_published_match.group(1)
             entry_published_date = datetime.strptime(entry_published, "%Y-%m-%dT%H:%M:%SZ")
 
+            # Filter out entries not from latest published date
             if latest_entry_published_date is None or entry_published_date > latest_entry_published_date:
                 latest_entry_published_date = entry_published_date
                 latest_day_entries = [entry_xml]
+                
             elif entry_published_date.date() == latest_entry_published_date.date():
                 latest_day_entries.append(entry_xml)
 
