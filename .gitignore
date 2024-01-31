@@ -1,1 +1,7 @@
-data/*.json
+data/final/*.json
+data/raw/*.json
+
+model/*pkl
+
+.metaflow
+config.yml
