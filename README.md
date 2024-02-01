@@ -13,5 +13,5 @@
 
 ## Todo
 
-- Paper filter algorithm
-- Better UI
+- History feature
+- Paper of the week/month feature
